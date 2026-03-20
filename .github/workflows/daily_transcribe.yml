@@ -1,0 +1,36 @@
+name: Daily Tagesschau Transcription
+
+on:
+  schedule:
+    - cron: '30 20 * * *' # Täglich um 20:30 Uhr
+  workflow_dispatch: # Erlaubt es dir, den Bot manuell zu starten
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: ambassadors/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install yt-dlp openai
+
+      - name: Run Transcription Script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          YOUTUBE_PLAYLIST_URL: "DEIN_PLAYLIST_LINK_HIER" # HIER DEINEN LINK EINFÜGEN
+        run: python scripts/transcribe.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "Transcription Bot"
+          git config --global user.email "bot@github.com"
+          git add data/*.json
+          git commit -m "New transcript added" || exit 0
+          git push
